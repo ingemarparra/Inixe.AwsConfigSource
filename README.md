@@ -1,4 +1,4 @@
-# Inixe Secrets Manager Configuration Source
+# Inixe AWS Configuration Source
 
 An implementation of a configuration source that consumes settings or key value pairs from AWS secrets manager/ System's Manager Parameter Store.
 
@@ -21,7 +21,8 @@ AWS Secrets Manager and System's Manager Parameter Store values using a Microsof
 # Building from Source
 
 ```pwsh
-
+$PackageVersion="1.0.0"
+dotnet build Inixe.Extensions.AwsConfigSource.sln -c Release -p:Version=$PackageVersion
 ```
 
 # License
