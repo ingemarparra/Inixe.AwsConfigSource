@@ -1,0 +1,5 @@
+<Project>
+    <ItemGroup Label="Global Packages">
+        <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.406" />
+    </ItemGroup>
+</Project>

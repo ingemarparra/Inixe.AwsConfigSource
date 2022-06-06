@@ -1,0 +1,22 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="RegisterGitHooks" AfterTargets="AfterBuild" Condition="$([MSBuild]::IsOSPlatform('windows'))">
+        <PropertyGroup Label="Githooks Registration">
+          <GitRepositoryPath>$(SolutionRootPath).git\</GitRepositoryPath>
+          <GitHooksPath>$(SolutionRootPath).githooks\</GitHooksPath>
+          <GitPrePushHook>$(GitHooksPath)pre-push</GitPrePushHook>
+          <GitPrePushScript>$(GitPrePushHook).ps1</GitPrePushScript>
+          <GitConfigFilePath>$([System.IO.Path]::Combine('$(GitRepositoryPath)','config'))</GitConfigFilePath>
+          <GitConfigContents Condition="$([System.IO.File]::Exists('$(GitConfigFilePath)'))">$([System.IO.File]::ReadAllText('$(GitConfigFilePath)'))</GitConfigContents>
+          <IsGitHookRegistered Condition="'$(GitConfigContents)' != ''">$(GitConfigContents.Contains('hooksPath = .githooks'))</IsGitHookRegistered>
+          <IsGitHookRegistered Condition="'$(GitConfigContents)' == ''">False</IsGitHookRegistered>
+          <HasPrePushHookDefined>$([System.IO.File]::Exists('$(GitPrePushHook)'))</HasPrePushHookDefined>
+          <HasPrePushHookScriptDefined>$([System.IO.File]::Exists('$(GitPrePushScript)'))</HasPrePushHookScriptDefined>
+          <EnablePrePushHook Condition="'$(HasPrePushHookDefined)' == 'False' AND '$(HasPrePushHookScriptDefined)' == 'True' AND '$(IsGitHookRegistered)' == 'False'" >True</EnablePrePushHook>
+        </PropertyGroup>
+
+        <Message  Condition="'$(EnablePrePushHook)' == 'True'"  Importance="Normal" Text="Registering GitHooks..." />
+        <WriteLinesToFile File="$(GitPrePushHook)" Lines="#!/usr/bin/env powershell" Overwrite="true" Encoding="Unicode" />
+        <Exec Condition="'$(EnablePrePushHook)' == 'True'" Command="git config core.hooksPath .githooks" WorkingDirectory="$(SolutionRootPath)"/>
+        <Message Condition="'$(EnablePrePushHook)' == 'True'" Importance="Normal" Text="Githooks Registered" />
+    </Target>
+</Project>
