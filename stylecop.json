@@ -1,0 +1,14 @@
+{
+    "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+    "settings": {
+        "layoutRules": {
+            "newlineAtEndOfFile": "require"
+        },
+        "documentationRules": {
+            "companyName": "Inixe S.A.",
+            "copyrightText": "Copyright All Rights reserved. Inixe S.A. 2021",
+            "xmlHeader": true,
+            "headerDecoration": "-----------------------------------------------------------------------"
+        }
+    }
+}
