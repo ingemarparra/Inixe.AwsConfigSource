@@ -6,6 +6,8 @@
 
 namespace Inixe.Extensions.AwsConfigSource
 {
+    using System;
+
     /// <summary>
     /// Options for The Configuration Source.
     /// </summary>
@@ -20,7 +22,36 @@ namespace Inixe.Extensions.AwsConfigSource
         {
             this.PathSeparator = '/';
             this.SecretNameAsPath = false;
+            this.BuildExceptionHandler = s => { };
+
+            // This will default the SDK file to the SDK Default path.
+            this.AwsCredentialsProfilePath = string.Empty;
         }
+
+        /// <summary>
+        /// Gets or sets the build exception handler. The exception handler is used as a helper for access permissions issues. If an exception is thrown from the underlying AWS client it will be passed to the handler.
+        /// </summary>
+        /// <value>
+        /// The build exception handler.
+        /// </value>
+        public Action<Exception> BuildExceptionHandler { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the AWS region the system is going to be accessing.
+        /// </summary>
+        /// <value>
+        /// The name of the AWS region the system is going to be accessing.
+        /// </value>
+        public string AwsRegionName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the AWS credentials profile path.
+        /// </summary>
+        /// <value>
+        /// The AWS credentials profile path.
+        /// </value>
+        /// <remarks>The AWS SDK supports loading profiles from paths other than the default path specified in the documentation. This can also help on testing scenarios.</remarks>
+        public string AwsCredentialsProfilePath { get; set; }
 
         /// <summary>
         /// Gets or sets the secrets manager service URL. If you are using a VPC endpoint or a compatible API, this can override the SDK selected endpoint.

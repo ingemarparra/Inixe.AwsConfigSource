@@ -19,6 +19,6 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <param name="key">The key name that will be used as base or as the name itself of an entry.</param>
         /// <param name="secret">The secret value.</param>
         /// <returns>A list of Key value pairs with the secret entry data.</returns>
-        IList<KeyValuePair<string, string>> GetConfigurationPairs(string key, string secret);
+        IEnumerable<KeyValuePair<string, string>> GetConfigurationPairs(string key, string secret);
     }
 }

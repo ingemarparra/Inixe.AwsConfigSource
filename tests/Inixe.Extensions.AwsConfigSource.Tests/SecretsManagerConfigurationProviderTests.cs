@@ -29,11 +29,19 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         {
             this.valuePairStrategyMock = new Mock<IValuePairStrategy>(MockBehavior.Strict);
             this.valuePairStrategyMock.Setup(x => x.GetConfigurationPairs(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(new List<KeyValuePair<string, string>>());
+                .Returns<string, string>((k, v) => new Dictionary<string, string>() { { k, v } });
 
             this.secretsManagerMock = new Mock<IAmazonSecretsManager>(MockBehavior.Strict);
             this.secretsManagerMock.Setup(x => x.ListSecretsAsync(It.IsAny<ListSecretsRequest>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(new ListSecretsResponse() { NextToken = string.Empty }));
+        }
+
+        public static IEnumerable<object[]> SecretsManagerAccessExceptions
+        {
+            get
+            {
+                return new List<object[]> { new object[] { new UnauthorizedAccessException() }, new object[] { new AmazonSecretsManagerException(new UnauthorizedAccessException()) } };
+            }
         }
 
         [Fact]
@@ -71,6 +79,18 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         }
 
         [Fact]
+        public void Should_ThrowArgumentNullException_When_OptionsIsNotNullAndSecretsManagerFactoryIsNotNullAndValuePairStrategyIsNull()
+        {
+            // Arrange
+            var options = new AwsConfigurationSourceOptions();
+            Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> factory = options => null;
+            IValuePairStrategy valuePairStrategy = null;
+
+            // Assert
+            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy));
+        }
+
+        [Fact]
         public void Should_CreateSecretsManagerConfigurationProvider_When_OptionsIsNotNullAndSecretsManagerFactoryIsNotNull()
         {
             // Arrange
@@ -99,6 +119,28 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             this.secretsManagerMock.Verify(x => x.ListSecretsAsync(It.IsAny<ListSecretsRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        [Theory]
+        [MemberData(nameof(SecretsManagerAccessExceptions))]
+        public void Should_InvokeExceptionHandler_When_LoadingSettingsAndUserCantListSecrets(Exception ex)
+        {
+            // Arrange
+            var wasCalled = false;
+
+            this.secretsManagerMock.Setup(x => x.ListSecretsAsync(It.IsAny<ListSecretsRequest>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(ex);
+
+            var options = new AwsConfigurationSourceOptions();
+            options.BuildExceptionHandler = x => wasCalled = true;
+
+            var sut = this.CreateInstance(options);
+
+            // Act
+            sut.Load();
+
+            // Assert
+            Assert.True(wasCalled);
+        }
+
         [Fact]
         public void Should_PassSecrestsFilter_When_LoadingSettingsAndSecretNameAsPathIsTrue()
         {
@@ -122,6 +164,29 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
 
             // Assert
             Assert.True(isUsingFilters);
+        }
+
+        [Theory]
+        [MemberData(nameof(SecretsManagerAccessExceptions))]
+        public void Should_CallExceptionHandler_When_LoadingSettingsAndAccessToSecretIsDenied(Exception ex)
+        {
+            // Arrange
+            var wasCalled = false;
+
+            this.SetupSecretsManagerSecret(SecretName, SecretValue);
+            this.secretsManagerMock.Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(ex);
+
+            var options = new AwsConfigurationSourceOptions();
+            options.BuildExceptionHandler = e => wasCalled = true;
+
+            var sut = this.CreateInstance(options);
+
+            // Act
+            sut.Load();
+
+            // Assert
+            Assert.True(wasCalled);
         }
 
         [Fact]
@@ -184,9 +249,6 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         public void Should_CreateConfiguartionEntryFromSecret_When_LoadingSettingsAndSecretNameAsPathIsTrue(string secretName, string secretValue, bool secretNameAsPath, string basePath, string expectedName)
         {
             // Arrange
-            this.valuePairStrategyMock.Setup(x => x.GetConfigurationPairs(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns<string, string>((k, v) => new List<KeyValuePair<string, string>>() { new KeyValuePair<string, string>(k, v) });
-
             this.SetupSecretsManagerSecret(secretName, secretValue);
 
             var options = new AwsConfigurationSourceOptions();
@@ -202,10 +264,10 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             Assert.True(sut.TryGet(expectedName, out _));
         }
 
-        private void SetupSecretsManagerSecret(string SecretName, string SecretValue)
+        private void SetupSecretsManagerSecret(string secretName, string secretValue)
         {
             var entry = new SecretListEntry();
-            entry.Name = SecretName;
+            entry.Name = secretName;
 
             var listSecretsResponse = new ListSecretsResponse();
             listSecretsResponse.NextToken = string.Empty;
@@ -216,7 +278,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
                 .Returns(Task.FromResult(listSecretsResponse));
 
             this.secretsManagerMock.Setup(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new GetSecretValueResponse { Name = SecretName, SecretString = SecretValue }));
+                .Returns(Task.FromResult(new GetSecretValueResponse { Name = secretName, SecretString = secretValue }));
         }
 
         private SecretsManagerConfigurationProvider CreateInstance(AwsConfigurationSourceOptions options)

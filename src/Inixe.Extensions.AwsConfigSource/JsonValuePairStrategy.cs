@@ -24,7 +24,7 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <returns>
         /// A list of Key value pairs with the secret entry data.
         /// </returns>
-        public IList<KeyValuePair<string, string>> GetConfigurationPairs(string key, string secret)
+        public IEnumerable<KeyValuePair<string, string>> GetConfigurationPairs(string key, string secret)
         {
             var pairs = new List<KeyValuePair<string, string>>();
 

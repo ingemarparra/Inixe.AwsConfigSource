@@ -44,7 +44,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var res = strategy.GetConfigurationPairs(SecretName, SecretValue);
 
             // Assert
-            Assert.True(res.Count == 2);
+            Assert.True(res.Count() == 2);
         }
 
         [Theory]

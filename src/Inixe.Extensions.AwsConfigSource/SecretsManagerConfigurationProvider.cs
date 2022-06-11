@@ -97,9 +97,13 @@ namespace Inixe.Extensions.AwsConfigSource
                 }
                 while (!string.IsNullOrEmpty(token));
             }
-            catch (AmazonSecretsManagerException)
+            catch (AmazonSecretsManagerException asme)
             {
-                // Nothing to do here it's most likely that we do not have permission to access the secrets list
+                this.options.BuildExceptionHandler?.Invoke(asme);
+            }
+            catch (UnauthorizedAccessException uaex)
+            {
+                this.options.BuildExceptionHandler?.Invoke(uaex);
             }
 
             return secretsEntries;
@@ -122,13 +126,19 @@ namespace Inixe.Extensions.AwsConfigSource
                     var secretEntries = this.valuePairStrategy.GetConfigurationPairs(key, response.SecretString);
                     entries.AddRange(secretEntries);
                 }
-                catch (AmazonSecretsManagerException)
+                catch (AmazonSecretsManagerException asme)
                 {
+                    this.options.BuildExceptionHandler?.Invoke(asme);
+                    continue;
+                }
+                catch (UnauthorizedAccessException uaex)
+                {
+                    this.options.BuildExceptionHandler?.Invoke(uaex);
                     continue;
                 }
             }
 
-            return new Dictionary<string, string>(entries);
+            return new Dictionary<string, string>(entries, StringComparer.InvariantCultureIgnoreCase);
         }
 
         private string FormatSecretKey(SecretListEntry item)

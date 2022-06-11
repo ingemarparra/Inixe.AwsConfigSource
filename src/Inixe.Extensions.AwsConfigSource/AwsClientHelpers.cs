@@ -7,6 +7,8 @@
 namespace Inixe.Extensions.AwsConfigSource
 {
     using System;
+    using System.Linq;
+    using Amazon;
     using Amazon.SecretsManager;
 
     /// <summary>
@@ -29,7 +31,6 @@ namespace Inixe.Extensions.AwsConfigSource
             }
 
             var clientOptions = new AmazonSecretsManagerConfig();
-
             if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
             {
                 clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
@@ -37,19 +38,39 @@ namespace Inixe.Extensions.AwsConfigSource
 
             if (!string.IsNullOrEmpty(options.ProfileName))
             {
-                var credentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile();
-                if (credentialsFile.TryGetProfile(options.ProfileName, out var credentialProfile))
-                {
-                    var credentials = credentialProfile.GetAWSCredentials(null);
-                    return new AmazonSecretsManagerClient(credentials, credentialProfile.Region);
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid Profile name supplied", nameof(options));
-                }
+                return CreateClientWithProfileCredentials(options, clientOptions);
             }
 
-            return new AmazonSecretsManagerClient();
+            if (!string.IsNullOrWhiteSpace(options.AwsRegionName))
+            {
+                clientOptions.RegionEndpoint = FindRegionEndpoint(options.AwsRegionName);
+            }
+
+            return new AmazonSecretsManagerClient(clientOptions);
+        }
+
+        private static RegionEndpoint FindRegionEndpoint(string awsRegionName)
+        {
+            const bool IgnoreCase = true;
+
+            Func<RegionEndpoint, bool> predicate = region => string.Compare(region.SystemName, awsRegionName, IgnoreCase) == 0;
+            return Amazon.RegionEndpoint.EnumerableAllRegions.SingleOrDefault(predicate);
+        }
+
+        private static IAmazonSecretsManager CreateClientWithProfileCredentials(AwsConfigurationSourceOptions options, AmazonSecretsManagerConfig clientOptions)
+        {
+            var credentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile(options.AwsCredentialsProfilePath);
+            if (credentialsFile.TryGetProfile(options.ProfileName, out var credentialProfile))
+            {
+                var credentials = credentialProfile.GetAWSCredentials(null);
+                clientOptions.RegionEndpoint = credentialProfile.Region;
+
+                return new AmazonSecretsManagerClient(credentials, clientOptions);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid Profile name supplied", nameof(options));
+            }
         }
     }
 }
