@@ -75,6 +75,23 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <value>
         ///   <c>true</c> if use secret name paths; otherwise, <c>false</c>.
         /// </value>
+        /// <remarks>
+        /// When a secret contains path separator characters after the <see cref="BaseSecretNamePath"/> has been removed, those instances will become colons in order to state the hierarchical configuration object notation.
+        /// <para>
+        /// Let secret name be: /my-company/service1/section1/subsection1/subsection2
+        /// Let <see cref="BaseSecretNamePath"/> be: /my-company/service1/
+        ///
+        /// This will create a setting with the following path in the configuration dictionary: section1:subsection1:subsection2
+        /// This will be the equivalent of the appsettings.json
+        /// {
+        ///    "section1":{
+        ///      "subsection1":{
+        ///        "subsection2": "xxx"
+        ///      }
+        ///    }
+        /// }.
+        /// </para>
+        /// </remarks>
         public bool SecretNameAsPath { get; set; }
 
         /// <summary>

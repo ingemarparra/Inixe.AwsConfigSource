@@ -143,7 +143,17 @@ namespace Inixe.Extensions.AwsConfigSource
 
         private string FormatSecretKey(SecretListEntry item)
         {
-            return this.options.SecretNameAsPath ? item.Name.Replace(this.options.BaseSecretNamePath, string.Empty) : item.Name;
+            if (this.options.SecretNameAsPath)
+            {
+                var keyName = item.Name.Replace(this.options.BaseSecretNamePath, string.Empty);
+
+                var configKeyName = keyName.Replace('/', ':');
+                return configKeyName;
+            }
+            else
+            {
+                return item.Name;
+            }
         }
 
         private ListSecretsRequest CreateListSecretRequest(string token)
