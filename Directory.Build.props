@@ -5,47 +5,47 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
   </PropertyGroup>
   
-  <PropertyGroup Label="Build Paths">
+  <PropertyGroup Label="Global Build Paths">
     <BuildPropsFile>Directory.Build.props</BuildPropsFile>
     <SolutionRootPath>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), '$(BuildPropsFile)'))</SolutionRootPath>
     <BinariesDirectoryPath>$(SolutionRootPath)bin\</BinariesDirectoryPath>
-    <DocumentsDirectoryPath>$(SolutionRootPath)doc\</DocumentsDirectoryPath>
   </PropertyGroup>
 
-  <PropertyGroup Label="Test Project Detection">
+  <PropertyGroup Label="Project Purpose">
     <IsTestProject Condition="$(MSBuildProjectName.EndsWith('Tests'))">true</IsTestProject>
+    <IsSampleProject Condition="$(MSBuildProjectDirectory.Contains('samples'))">true</IsSampleProject>
+    <IsArtifactProject Condition="'$(IsTestProject)'=='' AND '$(IsSampleProject)'==''">true</IsArtifactProject>
+    <IsSupportProject  Condition="'$(IsTestProject)'=='true' OR '$(IsSampleProject)'=='true'">true</IsSupportProject>
+  </PropertyGroup>
+  <PropertyGroup Label="Output ant Temp directories override">
+    <ArtifactsPath Condition="'$(IsArtifactProject)'=='true'">$(BinariesDirectoryPath)artifacts\$(Configuration)</ArtifactsPath>
+    <ArtifactsPath Condition="'$(IsTestProject)'=='true'">$(BinariesDirectoryPath)tests\$(MSBuildProjectName)\$(Configuration)</ArtifactsPath>
+    <ArtifactsPath Condition="'$(IsSampleProject)'=='true'">$(BinariesDirectoryPath)samples\$(MSBuildProjectName)\$(Configuration)</ArtifactsPath>
+    
+    <TemporaryArtifactsPath>$(BinariesDirectoryPath)temp\$(MSBuildProjectName)\$(Configuration)</TemporaryArtifactsPath>
+
+    <DocumentationArtifactsFile Condition="'$(IsArtifactProject)'=='true'">$(BinariesDirectoryPath)doc\xml\$(Configuration)\$(MSBuildProjectName).xml</DocumentationArtifactsFile>
+    <DocumentationArtifactsFile Condition="'$(IsSupportProject)'=='true'">$(BinariesDirectoryPath)temp\xml\$(Configuration)\$(MSBuildProjectName).xml</DocumentationArtifactsFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(IsTestProject)'==''">
-    <OutputPath>$(BinariesDirectoryPath)artifacts\$(Configuration)</OutputPath>
-    <IntermediateOutputPath>$(BinariesDirectoryPath)temp\artifacts\$(Configuration)</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>$(BinariesDirectoryPath)temp\artifacts\$(Configuration)</BaseIntermediateOutputPath>
-    <DocumentationFile>$(DocumentsDirectoryPath)xml\$(Configuration)\$(MSBuildProjectName)</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(IsTestProject)'==''">
-    <OutputPath>$(BinariesDirectoryPath)artifacts\$(Configuration)</OutputPath>
-    <IntermediateOutputPath>$(BinariesDirectoryPath)temp\artifacts\$(Configuration)</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>$(BinariesDirectoryPath)temp\artifacts\$(Configuration)</BaseIntermediateOutputPath>
-    <DocumentationFile>$(DocumentsDirectoryPath)xml\$(Configuration)\$(MSBuildProjectName)</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(IsTestProject)'=='true'">
-    <OutputPath>$(BinariesDirectoryPath)tests\$(Configuration)</OutputPath>
-    <IntermediateOutputPath>$(BinariesDirectoryPath)temp\tests\$(Configuration)</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>$(BinariesDirectoryPath)temp\tests\$(Configuration)</BaseIntermediateOutputPath>
-    <DocumentationFile>$(DocumentsDirectoryPath)xml\$(Configuration)\$(MSBuildProjectName)</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(IsTestProject)'=='true'">
-    <OutputPath>$(BinariesDirectoryPath)tests\$(Configuration)</OutputPath>
-    <IntermediateOutputPath>$(BinariesDirectoryPath)bin\temp\tests\$(Configuration)</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>$(BinariesDirectoryPath)bin\temp\tests\$(Configuration)</BaseIntermediateOutputPath>
-    <DocumentationFile>$(DocumentsDirectoryPath)xml\$(Configuration)\$(MSBuildProjectName)</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Label="Full Debug for Profilers" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>$(ArtifactsPath)</OutputPath>
+    <IntermediateOutputPath>$(TemporaryArtifactsPath)</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>$(TemporaryArtifactsPath)</BaseIntermediateOutputPath>
+    <DocumentationFile>$(DocumentationArtifactsFile)</DocumentationFile>
     <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>$(ArtifactsPath)</OutputPath>
+    <IntermediateOutputPath>$(TemporaryArtifactsPath)</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>$(TemporaryArtifactsPath)</BaseIntermediateOutputPath>
+    <DocumentationFile>$(DocumentationArtifactsFile)</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Documentation file generation">
+    <GenerateDocumentationFile Condition="'$(IsArtifactProject)'=='true' ">true</GenerateDocumentationFile>
+    <GenerateDocumentationFile Condition="'$(IsSupportProject)'=='true'">false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Label="StyleCop Paths">
@@ -54,7 +54,7 @@
     <StyleCopRelativePath>$([System.Text.RegularExpressions.Regex]::Replace('$(StyleCopRelativeToSolution)', '[a-zA-Z0-9\.\{\},]+\\', '..\'))</StyleCopRelativePath>
   </PropertyGroup>
 
-  <ItemGroup Label="StyleCop Package and Configuration">
+  <ItemGroup Label="StyleCop Package and Configuration Items">
     <AdditionalFiles Include="$(StyleCopRelativePath)" Link="stylecop.json" />
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
   </ItemGroup>

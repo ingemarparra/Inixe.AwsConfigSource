@@ -9,7 +9,7 @@ AWS Secrets Manager and System's Manager Parameter Store values using a Microsof
 
 * [Prerequisites](#prerequisites)
 * [Building from Source](#building-from-source)
-* Samples
+* [How to use](#how-to-use)
 * [License](#license)
 
 # Prerequisites
@@ -17,6 +17,7 @@ AWS Secrets Manager and System's Manager Parameter Store values using a Microsof
 * .NET 6.0 SDK version 6 or above
 * Visual Studio Code, Visual Studio 2019 or above
 * Powershell 7.0 or above
+* AWS CLI v2
 
 # Building from Source
 
@@ -24,6 +25,37 @@ AWS Secrets Manager and System's Manager Parameter Store values using a Microsof
 $PackageVersion="1.0.0"
 dotnet build Inixe.Extensions.AwsConfigSource.sln -c Release -p:Version=$PackageVersion
 ```
+
+# How to use
+
+Using the package is as simple as adding a new configuration source.
+
+```csharp
+public IConfigurationBuilder SetupConfiguration()
+{
+    var builder = new ConfigurationBuilder();
+    builder.AddAwsConfiguration();
+    
+    return builder;
+}
+```
+
+The configuration source is optional by default, so it's recommended to add it last to the build chain.
+
+```csharp
+public IConfigurationBuilder SetupConfiguration()
+{
+    var builder = new ConfigurationBuilder();
+    builder.AddJsonFile("appsettings.json")
+        .AddEnvironmentVariables()
+        .AddInMemoryCollection()
+        .AddAwsConfiguration();
+    
+    return builder;
+}
+```
+
+Check the samples folder for more details.
 
 # License
 
