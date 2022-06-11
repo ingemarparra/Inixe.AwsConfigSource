@@ -31,11 +31,6 @@ namespace Inixe.Extensions.AwsConfigSource
             }
 
             var clientOptions = new AmazonSecretsManagerConfig();
-            if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
-            {
-                clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
-            }
-
             if (!string.IsNullOrEmpty(options.ProfileName))
             {
                 return CreateClientWithProfileCredentials(options, clientOptions);
@@ -44,6 +39,11 @@ namespace Inixe.Extensions.AwsConfigSource
             if (!string.IsNullOrWhiteSpace(options.AwsRegionName))
             {
                 clientOptions.RegionEndpoint = FindRegionEndpoint(options.AwsRegionName);
+            }
+
+            if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
+            {
+                clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
             }
 
             return new AmazonSecretsManagerClient(clientOptions);
@@ -64,6 +64,12 @@ namespace Inixe.Extensions.AwsConfigSource
             {
                 var credentials = credentialProfile.GetAWSCredentials(null);
                 clientOptions.RegionEndpoint = credentialProfile.Region;
+
+                // Setting the Region endpoint will reset the Service URL to null.
+                if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
+                {
+                    clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
+                }
 
                 return new AmazonSecretsManagerClient(credentials, clientOptions);
             }

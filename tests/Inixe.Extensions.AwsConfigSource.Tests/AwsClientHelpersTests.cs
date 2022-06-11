@@ -111,5 +111,36 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var regionName = client.Config.RegionEndpoint.SystemName;
             Assert.Equal(Amazon.RegionEndpoint.EUNorth1.SystemName, regionName);
         }
+
+        [Fact]
+        public void Should_UseProvidedServiceUrl_When_UsingExistingProfileName()
+        {
+            // Arrange
+            const string EndpointUrl = "http://localhost/";
+            const string ProfileName = "Sample";
+
+            var profileOptions = new CredentialProfileOptions();
+            profileOptions.AccessKey = "Anything";
+            profileOptions.SecretKey = "Secret";
+
+            var profile = new CredentialProfile(ProfileName, profileOptions);
+            profile.Region = Amazon.RegionEndpoint.EUNorth1;
+
+            var credentialsFilePath = System.IO.Path.GetTempFileName();
+            var credentialsFile = new SharedCredentialsFile(credentialsFilePath);
+            credentialsFile.RegisterProfile(profile);
+
+            var options = new AwsConfigurationSourceOptions();
+            options.ProfileName = ProfileName;
+            options.AwsCredentialsProfilePath = credentialsFilePath;
+            options.SecretsManagerServiceUrl = EndpointUrl;
+
+            // Act
+            var client = AwsClientHelpers.CreateSecretsManagerClient(options);
+
+            // Assert
+            var regionName = client.Config.ServiceURL;
+            Assert.Equal(EndpointUrl, regionName);
+        }
     }
 }

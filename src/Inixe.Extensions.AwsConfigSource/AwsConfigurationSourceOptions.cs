@@ -23,6 +23,7 @@ namespace Inixe.Extensions.AwsConfigSource
             this.PathSeparator = '/';
             this.SecretNameAsPath = false;
             this.BuildExceptionHandler = s => { };
+            this.basePath = string.Empty;
 
             // This will default the SDK file to the SDK Default path.
             this.AwsCredentialsProfilePath = string.Empty;
