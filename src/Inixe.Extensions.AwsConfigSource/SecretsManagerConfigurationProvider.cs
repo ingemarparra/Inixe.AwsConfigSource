@@ -39,10 +39,12 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <param name="secretsManagerFactory">The secrets manager factory.</param>
         /// <param name="options">The options.</param>
         /// <param name="valuePairStrategy">The value pair transformer strategy that will be used for creating value configuration value pairs.</param>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="ArgumentNullException">When either
         /// options
         /// or
-        /// secretsManagerFactory.
+        /// secretsManagerFactory
+        /// or
+        /// valuePairStrategy is null.
         /// </exception>
         internal SecretsManagerConfigurationProvider(Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> secretsManagerFactory, AwsConfigurationSourceOptions options, IValuePairStrategy valuePairStrategy)
         {
@@ -51,13 +53,27 @@ namespace Inixe.Extensions.AwsConfigSource
             this.valuePairStrategy = valuePairStrategy ?? throw new ArgumentNullException(nameof(valuePairStrategy));
         }
 
+        /// <summary>
+        /// Gets the options instance.
+        /// </summary>
+        /// <value>
+        /// The options instance.
+        /// </value>
+        internal AwsConfigurationSourceOptions Options
+        {
+            get
+            {
+                return this.options;
+            }
+        }
+
         private IAmazonSecretsManager Client
         {
             get
             {
                 if (this.secretsManagerClient == null)
                 {
-                    this.secretsManagerClient = this.secretsManagerFactory(this.options);
+                    this.secretsManagerClient = this.secretsManagerFactory(this.Options);
                 }
 
                 return this.secretsManagerClient;
@@ -99,11 +115,11 @@ namespace Inixe.Extensions.AwsConfigSource
             }
             catch (AmazonSecretsManagerException asme)
             {
-                this.options.BuildExceptionHandler?.Invoke(asme);
+                this.Options.BuildExceptionHandler?.Invoke(asme);
             }
             catch (UnauthorizedAccessException uaex)
             {
-                this.options.BuildExceptionHandler?.Invoke(uaex);
+                this.Options.BuildExceptionHandler?.Invoke(uaex);
             }
 
             return secretsEntries;
@@ -128,12 +144,12 @@ namespace Inixe.Extensions.AwsConfigSource
                 }
                 catch (AmazonSecretsManagerException asme)
                 {
-                    this.options.BuildExceptionHandler?.Invoke(asme);
+                    this.Options.BuildExceptionHandler?.Invoke(asme);
                     continue;
                 }
                 catch (UnauthorizedAccessException uaex)
                 {
-                    this.options.BuildExceptionHandler?.Invoke(uaex);
+                    this.Options.BuildExceptionHandler?.Invoke(uaex);
                     continue;
                 }
             }
@@ -143,9 +159,9 @@ namespace Inixe.Extensions.AwsConfigSource
 
         private string FormatSecretKey(SecretListEntry item)
         {
-            if (this.options.SecretNameAsPath)
+            if (this.Options.SecretNameAsPath)
             {
-                var keyName = item.Name.Replace(this.options.BaseSecretNamePath, string.Empty);
+                var keyName = item.Name.Replace(this.Options.BaseSecretNamePath, string.Empty);
 
                 var configKeyName = keyName.Replace('/', ':');
                 return configKeyName;
@@ -171,7 +187,7 @@ namespace Inixe.Extensions.AwsConfigSource
                 var filter = new Filter();
                 filter.Key = FilterNameStringType.Name;
                 filter.Values = new List<string>();
-                filter.Values.Add(this.options.BaseSecretNamePath);
+                filter.Values.Add(this.Options.BaseSecretNamePath);
 
                 request.Filters.Add(filter);
             }

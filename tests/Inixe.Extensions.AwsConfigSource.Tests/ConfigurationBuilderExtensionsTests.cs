@@ -45,5 +45,29 @@
             // Assert
             Assert.NotNull(res);
         }
+
+        [Fact]
+        public void Should_ThrowArgumentNullException_When_ConfigurationBuilderIsNullAndOptionsIsNotNull()
+        {
+            // Arrange
+            IConfigurationBuilder builder = null;
+            var options = new AwsConfigurationSourceOptions();
+
+            // Act
+            // Assert
+            Assert.Throws<ArgumentNullException>(() => builder.AddAwsConfiguration(options));
+        }
+
+        [Fact]
+        public void Should_ThrowArgumentNullException_When_ConfigurationBuilderIsNullAndConfigSectionNameIsNotEmpty()
+        {
+            // Arrange
+            IConfigurationBuilder builder = null;
+            var configSectionName = "Sample";
+
+            // Act
+            // Assert
+            Assert.Throws<ArgumentNullException>(() => builder.AddAwsConfiguration(configSectionName));
+        }
     }
 }
