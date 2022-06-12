@@ -1,0 +1,41 @@
+#------------------------------------------------------------------------------
+#
+# Copyright Inixe S.A
+#
+# File: ci.yml
+# Purpose: Github Actions CI pipeilne
+#------------------------------------------------------------------------------
+on:
+  push:
+    branches:
+      - master
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Publish Nuget
+    steps:
+    - name: Get Source
+      uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.0
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      shell: pwsh
+      run: |
+        $Version=$Env:GITHUB_REF -replace "refs/tags/v", ""
+        dotnet build -c Release --no-restore -p:Version=$Version
+    - name: Test
+      run: dotnet test --no-build -c Release --verbosity normal
+    - name: Pack
+      shell: pwsh
+      run: |
+        $Version=$Env:GITHUB_REF -replace "refs/tags/v", ""
+        dotnet pack src\Inixe.Extensions.AwsConfigSource\Inixe.Extensions.AwsConfigSource.csproj -c Release -p:NuspecBasePath=. -p=Version=$Version
+    - name: Push Nuget
+      run: dotnet nuget push bin/artifacts/Release/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_ORG_TOKEN}} --skip-duplicate

@@ -3,6 +3,8 @@
     <Deterministic>true</Deterministic>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   
   <PropertyGroup Label="Global Build Paths">
@@ -16,7 +18,9 @@
     <IsSampleProject Condition="$(MSBuildProjectDirectory.Contains('samples'))">true</IsSampleProject>
     <IsArtifactProject Condition="'$(IsTestProject)'=='' AND '$(IsSampleProject)'==''">true</IsArtifactProject>
     <IsSupportProject  Condition="'$(IsTestProject)'=='true' OR '$(IsSampleProject)'=='true'">true</IsSupportProject>
+    <IsPackable Condition="'$(IsArtifactProject)'=='true'">true</IsPackable>
   </PropertyGroup>
+
   <PropertyGroup Label="Output ant Temp directories override">
     <ArtifactsPath Condition="'$(IsArtifactProject)'=='true'">$(BinariesDirectoryPath)artifacts\$(Configuration)</ArtifactsPath>
     <ArtifactsPath Condition="'$(IsTestProject)'=='true'">$(BinariesDirectoryPath)tests\$(MSBuildProjectName)\$(Configuration)</ArtifactsPath>
