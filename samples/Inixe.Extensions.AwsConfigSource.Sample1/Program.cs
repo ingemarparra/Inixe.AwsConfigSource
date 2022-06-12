@@ -8,13 +8,14 @@ namespace Inixe.Extensions.AwsConfigSource.Sample1
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+    using Inixe.Extensions.AwsConfigSource;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Inixe.Extensions.AwsConfigSource;
 
     public class Program
     {
@@ -37,6 +38,7 @@ namespace Inixe.Extensions.AwsConfigSource.Sample1
                         options.SecretsManagerServiceUrl = "http://localhost:4566";
 
                         builder.AddCommandLine(args)
+                        .SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("appsettings.json")
                         .AddEnvironmentVariables()
                         .AddInMemoryCollection()

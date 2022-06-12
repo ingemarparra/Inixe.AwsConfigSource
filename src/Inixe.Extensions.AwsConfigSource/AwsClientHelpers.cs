@@ -21,7 +21,7 @@ namespace Inixe.Extensions.AwsConfigSource
         /// </summary>
         /// <param name="options">The options.</param>
         /// <returns>A Secrets Manager Client based on the supplied options.</returns>
-        /// <exception cref="System.ArgumentNullException">options.</exception>
+        /// <exception cref="System.ArgumentNullException">When options is null.</exception>
         /// <exception cref="System.ArgumentException">Invalid Profile name supplied - options.</exception>
         internal static IAmazonSecretsManager CreateSecretsManagerClient(AwsConfigurationSourceOptions options)
         {
