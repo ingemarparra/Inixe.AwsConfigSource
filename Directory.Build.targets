@@ -14,8 +14,13 @@
           <EnablePrePushHook Condition="'$(HasPrePushHookDefined)' == 'False' AND '$(HasPrePushHookScriptDefined)' == 'True' AND '$(IsGitHookRegistered)' == 'False'" >True</EnablePrePushHook>
         </PropertyGroup>
 
+        <ItemGroup Label="Githook Lines">
+          <GitHookShell Include="#!/usr/bin/env powershell"/>
+          <GitHookShell Include=" "/>
+        </ItemGroup>
+        
         <Message  Condition="'$(EnablePrePushHook)' == 'True'"  Importance="Normal" Text="Registering GitHooks..." />
-        <WriteLinesToFile File="$(GitPrePushHook)" Lines="#!/usr/bin/env powershell" Overwrite="true" Encoding="Unicode" />
+        <WriteLinesToFile File="$(GitPrePushHook)" Lines="@(GitHookShell)" Overwrite="true" />
         <Exec Condition="'$(EnablePrePushHook)' == 'True'" Command="git config core.hooksPath .githooks" WorkingDirectory="$(SolutionRootPath)"/>
         <Message Condition="'$(EnablePrePushHook)' == 'True'" Importance="Normal" Text="Githooks Registered" />
     </Target>

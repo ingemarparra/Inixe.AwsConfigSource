@@ -6,9 +6,8 @@
 # Purpose: Testing Script for Unit Test
 #------------------------------------------------------------------------------
 param(
-    [string]$TestResultsDir,
     [Parameter(Mandatory=$true)]
-    [string]$CoverageReportsDir,
+    [string]$TestResultsDir,
     [Parameter(Mandatory=$false)]
     [int]$Threshold = 80
 )
