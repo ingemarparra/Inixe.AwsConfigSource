@@ -59,16 +59,19 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         }
 
         [Fact]
-        public void Should_ReturnInstance_When_OptionsIsDefault()
+        public void Should_ReturnConfiguredInstanceToRegion_When_OptionsIsDefaultAndAwsSdkDeterminesTheRegion()
         {
             // Arrange
+            const string RegionName = "us-east-1";
+
+            Environment.SetEnvironmentVariable("AWS_REGION", RegionName, EnvironmentVariableTarget.Process);
             var options = new AwsConfigurationSourceOptions();
 
             // Act
             var client = AwsClientHelpers.CreateSecretsManagerClient(options);
 
             // Assert
-            Assert.IsType<AmazonSecretsManagerClient>(client);
+            Assert.Equal(RegionName, client.Config.RegionEndpoint.SystemName);
         }
 
         [Fact]

@@ -41,11 +41,12 @@ jobs:
       run: |
         dotnet build -c Release -p:Version=${{ env.VERSION }}
     - name: Test
-      run: dotnet test --no-build -c Release --verbosity normal
+      run: |
+        dotnet test --no-build -c Release --verbosity normal
     - name: Pack
       shell: pwsh
       run: |
-        dotnet pack src\Inixe.Extensions.AwsConfigSource\Inixe.Extensions.AwsConfigSource.csproj -c Release -p:NuspecBasePath=. -p=Version=${{ env.VERSION }}
+        dotnet pack src\Inixe.Extensions.AwsConfigSource\Inixe.Extensions.AwsConfigSource.csproj -c Release -p:NuspecBasePath=. -p:Version=${{ env.VERSION }}
     - name: Push Nuget
       if: ${{ env.VERSION == 'TRUE' }}
       run: dotnet nuget push bin/artifacts/Release/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_TOKEN }} --skip-duplicate

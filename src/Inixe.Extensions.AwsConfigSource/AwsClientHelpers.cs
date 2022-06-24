@@ -30,12 +30,12 @@ namespace Inixe.Extensions.AwsConfigSource
                 throw new ArgumentNullException(nameof(options));
             }
 
-            var clientOptions = new AmazonSecretsManagerConfig();
             if (!string.IsNullOrEmpty(options.ProfileName))
             {
-                return CreateClientWithProfileCredentials(options, clientOptions);
+                return CreateClientWithProfileCredentials(options);
             }
 
+            var clientOptions = new AmazonSecretsManagerConfig();
             if (!string.IsNullOrWhiteSpace(options.AwsRegionName))
             {
                 clientOptions.RegionEndpoint = FindRegionEndpoint(options.AwsRegionName);
@@ -57,8 +57,9 @@ namespace Inixe.Extensions.AwsConfigSource
             return Amazon.RegionEndpoint.EnumerableAllRegions.SingleOrDefault(predicate);
         }
 
-        private static IAmazonSecretsManager CreateClientWithProfileCredentials(AwsConfigurationSourceOptions options, AmazonSecretsManagerConfig clientOptions)
+        private static IAmazonSecretsManager CreateClientWithProfileCredentials(AwsConfigurationSourceOptions options)
         {
+            var clientOptions = new AmazonSecretsManagerConfig();
             var credentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile(options.AwsCredentialsProfilePath);
             if (credentialsFile.TryGetProfile(options.ProfileName, out var credentialProfile))
             {
