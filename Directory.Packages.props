@@ -5,6 +5,7 @@
 
     <ItemGroup>
         <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.2.50" />
+        <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.17.20" />
         <PackageVersion Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
         <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
         <PackageVersion Include="Microsoft.Extensions.Options" Version="6.0.0" />

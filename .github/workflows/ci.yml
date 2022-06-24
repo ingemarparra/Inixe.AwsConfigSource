@@ -46,7 +46,11 @@ jobs:
     - name: Pack
       shell: pwsh
       run: |
-        dotnet pack src\Inixe.Extensions.AwsConfigSource\Inixe.Extensions.AwsConfigSource.csproj -c Release -p:NuspecBasePath=. -p:Version=${{ env.VERSION }}
+        dotnet pack .\src\Inixe.Extensions.AwsConfigSource\Inixe.Extensions.AwsConfigSource.csproj -c Release -p:NuspecBasePath=. -p:Version=${{ env.VERSION }} -o .\bin\artifacts\Release
+        $NugetPackageFile = Get-ChildItem .\bin\artifacts\Release\*.nupkg
+        Write-Host "::debug::$($NugetPackageFile)"
+        Add-Content $Env:GITHUB_ENV "NUGET_PACKAGE_FILE=$($NugetPackageFile)"
     - name: Push Nuget
-      if: ${{ env.VERSION == 'TRUE' }}
-      run: dotnet nuget push bin/artifacts/Release/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_TOKEN }} --skip-duplicate
+      shell: pwsh
+      if: ${{ env.PUBLISH_PACKAGE == 'TRUE' }}
+      run: dotnet nuget push ${{ env.NUGET_PACKAGE_FILE }} --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ORG_TOKEN }} --skip-duplicate

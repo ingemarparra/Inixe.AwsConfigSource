@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.SecretsManager" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
   </ItemGroup>
 </Project>
