@@ -11,8 +11,10 @@
     <description>A configuration source extension to use AWS Secrets Manager or Systems Manager Parameter store from Microsoft.Extensions.Configuration.</description>
     <copyright>Copyright All Rights reserved. Inixe S.A. 2021</copyright>
     <summary>Extends Microsoft.Extensions.Configuration by adding AWS Secrets Manager.</summary>
+    <projectUrl>https://github.com/ingemarparra/Inixe.AwsConfigSource</projectUrl>
+    <repository type="git" url="https://github.com/ingemarparra/Inixe.AwsConfigSource"/>
     <tags>aws-secrets-manager configuration</tags>
-    
+
     <dependencies>
       <dependency id="AWSSDK.SecretsManager" version="3.7.2.50" />
       <dependency id="Microsoft.Extensions.Configuration" version="6.0.1" />
@@ -20,7 +22,7 @@
   </metadata>
 
   <files>
-    <file src="..\..\bin\artifacts\$configuration$\Inixe.Extensions.AwsConfigSource.dll" target="lib\net5.0" />
-    <file src="..\..\bin\doc\xml\$configuration$\Inixe.Extensions.AwsConfigSource.xml" target="lib\net5.0" />
+    <file src="..\..\bin\artifacts\$configuration$\Inixe.Extensions.AwsConfigSource.dll" target="lib\net6.0" />
+    <file src="..\..\bin\doc\xml\$configuration$\Inixe.Extensions.AwsConfigSource.xml" target="lib\net6.0" />
   </files>
 </package>
