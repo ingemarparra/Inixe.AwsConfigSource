@@ -13,7 +13,8 @@ namespace Inixe.Extensions.AwsConfigSource
     /// </summary>
     public class AwsConfigurationSourceOptions
     {
-        private string basePath;
+        private string baseSecretNamePath;
+        private string baseParameterNamePath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AwsConfigurationSourceOptions"/> class.
@@ -23,7 +24,8 @@ namespace Inixe.Extensions.AwsConfigSource
             this.PathSeparator = '/';
             this.SecretNameAsPath = false;
             this.BuildExceptionHandler = s => { };
-            this.basePath = string.Empty;
+            this.baseSecretNamePath = string.Empty;
+            this.baseParameterNamePath = string.Empty;
 
             // This will default the SDK file to the SDK Default path.
             this.AwsCredentialsProfilePath = string.Empty;
@@ -96,6 +98,50 @@ namespace Inixe.Extensions.AwsConfigSource
         public bool SecretNameAsPath { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether use parameter name paths. For accounts that host several services and have secrets for each service, this will filter out only the <see cref="BaseParameterNamePath"/> from the parameter listing.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if use parameter name as paths; otherwise, <c>false</c>.
+        /// </value>
+        /// <remarks>
+        /// When a parameter name contains path separator characters after the <see cref="BaseParameterNamePath"/> has been removed, those instances will become colons in order to state the hierarchical configuration object notation.
+        /// <para>
+        /// Let parameter name be: /my-company/service1/section1/subsection1/subsection2
+        /// Let <see cref="BaseParameterNamePath"/> be: /my-company/service1/
+        ///
+        /// This will create a setting with the following path in the configuration dictionary: section1:subsection1:subsection2
+        /// This will be the equivalent of the appsettings.json
+        /// {
+        ///    "section1":{
+        ///      "subsection1":{
+        ///        "subsection2": "xxx"
+        ///      }
+        ///    }
+        /// }.
+        /// </para>
+        /// </remarks>
+        public bool ParameterNameAsPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the systems manager parameter store name base path.
+        /// </summary>
+        /// <value>
+        /// The systems manager parameter store base name path.
+        /// </value>
+        public string BaseParameterNamePath
+        {
+            get
+            {
+                return AwsClientHelpers.NormalizePath(this.baseParameterNamePath, this.ParameterNameAsPath, this.PathSeparator);
+            }
+
+            set
+            {
+                this.baseParameterNamePath = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the secrets name base path.
         /// </summary>
         /// <value>
@@ -105,12 +151,12 @@ namespace Inixe.Extensions.AwsConfigSource
         {
             get
             {
-                return !this.basePath.EndsWith(this.PathSeparator) && this.SecretNameAsPath ? this.basePath + this.PathSeparator : this.basePath;
+                return AwsClientHelpers.NormalizePath(this.baseSecretNamePath, this.SecretNameAsPath, this.PathSeparator);
             }
 
             set
             {
-                this.basePath = value;
+                this.baseSecretNamePath = value;
             }
         }
 
