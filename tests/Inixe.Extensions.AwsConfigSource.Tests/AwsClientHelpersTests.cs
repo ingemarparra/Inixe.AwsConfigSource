@@ -7,14 +7,13 @@
 namespace Inixe.Extensions.AwsConfigSource.Tests
 {
     using System;
-    using Amazon.SecretsManager;
     using Amazon.Runtime.CredentialManagement;
     using Xunit;
 
     public class AwsClientHelpersTests
     {
         [Fact]
-        public void Should_ThrowArgumentNullException_When_OptionsIsNull()
+        public void Should_ThrowArgumentNullException_When_CreatignSecretsManagerClientAndOptionsIsNull()
         {
             // Arrange
             AwsConfigurationSourceOptions options = null;
@@ -22,6 +21,17 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             // Act
             // Assert
             Assert.Throws<ArgumentNullException>(() => AwsClientHelpers.CreateSecretsManagerClient(options));
+        }
+
+        [Fact]
+        public void Should_ThrowArgumentNullException_When_CreatignSystemsManagementClientAndOptionsIsNull()
+        {
+            // Arrange
+            AwsConfigurationSourceOptions options = null;
+
+            // Act
+            // Assert
+            Assert.Throws<ArgumentNullException>(() => AwsClientHelpers.CreateSystemsManagementClient(options));
         }
 
         [Fact]
@@ -59,7 +69,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         }
 
         [Fact]
-        public void Should_ReturnConfiguredInstanceToRegion_When_OptionsIsDefaultAndAwsSdkDeterminesTheRegion()
+        public void Should_ReturnConfiguredSecretsManagerInstanceToRegion_When_OptionsIsDefaultAndAwsSdkDeterminesTheRegion()
         {
             // Arrange
             const string RegionName = "us-east-1";
@@ -75,7 +85,23 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         }
 
         [Fact]
-        public void Should_ThrowArgumentException_When_UsingNonExistingProfileName()
+        public void Should_ReturnConfiguredSystemsManagementInstanceToRegion_When_OptionsIsDefaultAndAwsSdkDeterminesTheRegion()
+        {
+            // Arrange
+            const string RegionName = "us-east-1";
+
+            Environment.SetEnvironmentVariable("AWS_REGION", RegionName, EnvironmentVariableTarget.Process);
+            var options = new AwsConfigurationSourceOptions();
+
+            // Act
+            var client = AwsClientHelpers.CreateSystemsManagementClient(options);
+
+            // Assert
+            Assert.Equal(RegionName, client.Config.RegionEndpoint.SystemName);
+        }
+
+        [Fact]
+        public void Should_ThrowArgumentException_When_CreateSecretsManagerUsingNonExistingProfileName()
         {
             // Arrange
             var options = new AwsConfigurationSourceOptions();
@@ -139,11 +165,59 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             options.SecretsManagerServiceUrl = EndpointUrl;
 
             // Act
-            var client = AwsClientHelpers.CreateSecretsManagerClient(options);
+            var client = AwsClientHelpers.CreateSystemsManagementClient(options);
 
             // Assert
             var regionName = client.Config.ServiceURL;
             Assert.Equal(EndpointUrl, regionName);
+        }
+
+        [Fact]
+        public void Should_AddPathSeparator_When_PathConainsTrailingPathSeparatorAndNormalizeIsTrue()
+        {
+            // Arrange
+            const bool Normalize = true;
+            const string TestPath = "/example";
+            const string Expected = "/example/";
+            const char PathSeparator = '/';
+
+            // Act
+            var res = AwsClientHelpers.NormalizePath(TestPath, Normalize, PathSeparator);
+
+            // Assert
+            Assert.Equal(Expected, res);
+        }
+
+        [Fact]
+        public void Should_RemovePathSeparator_When_PathNotConainsTrailingPathSeparatorAndNormalizeIsTrue()
+        {
+            // Arrange
+            const bool Normalize = true;
+            const string TestPath = "/example/";
+            const string Expected = "/example/";
+            const char PathSeparator = '/';
+
+            // Act
+            var res = AwsClientHelpers.NormalizePath(TestPath, Normalize, PathSeparator);
+
+            // Assert
+            Assert.Equal(Expected, res);
+        }
+
+        [Fact]
+        public void Should_NotRemovePathSeparator_When_PathConainsTrailingPathSeparatorAndNormalizeIsFalse()
+        {
+            // Arrange
+            const bool Normalize = false;
+            const string TestPath = "/example";
+            const string Expected = "/example";
+            const char PathSeparator = '/';
+
+            // Act
+            var res = AwsClientHelpers.NormalizePath(TestPath, Normalize, PathSeparator);
+
+            // Assert
+            Assert.Equal(Expected, res);
         }
     }
 }

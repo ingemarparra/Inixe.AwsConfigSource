@@ -9,7 +9,9 @@ namespace Inixe.Extensions.AwsConfigSource
     using System;
     using System.Linq;
     using Amazon;
+    using Amazon.Runtime;
     using Amazon.SecretsManager;
+    using Amazon.SimpleSystemsManagement;
 
     /// <summary>
     /// Helpers for creating Amazon Clients With the specified options.
@@ -17,13 +19,43 @@ namespace Inixe.Extensions.AwsConfigSource
     internal static class AwsClientHelpers
     {
         /// <summary>
+        /// Normalizes a path string by appending a path separator to the string if the path separator is not present.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <param name="normalize">if set to <c>true</c> string provided in path should be normalized by appending a path separator to the string if the path separator is not present.</param>
+        /// <param name="separator">The path separator character.</param>
+        /// <returns>The normalized path if <paramref name="normalize"/> is <c>true</c> otherwise <c>false</c> is returned.</returns>
+        internal static string NormalizePath(string path, bool normalize, char separator)
+        {
+            return !path.EndsWith(separator) && normalize ? path + separator : path;
+        }
+
+        /// <summary>
+        /// Creates the systems manager client.
+        /// </summary>
+        /// <param name="options">The Configuration Source options.</param>
+        /// <returns>A Secrets Manager Client based on the supplied options.</returns>
+        /// <exception cref="System.ArgumentNullException">When options is null.</exception>
+        /// <exception cref="System.ArgumentException">Invalid Profile name supplied - options.</exception>
+        internal static IAmazonSimpleSystemsManagement CreateSystemsManagementClient(AwsConfigurationSourceOptions options)
+        {
+            return CreateAwsClient<IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementConfig>(options, CreateSystemsManagementClient);
+        }
+
+        /// <summary>
         /// Creates the secrets manager client.
         /// </summary>
-        /// <param name="options">The options.</param>
+        /// <param name="options">The Configuration Source options.</param>
         /// <returns>A Secrets Manager Client based on the supplied options.</returns>
         /// <exception cref="System.ArgumentNullException">When options is null.</exception>
         /// <exception cref="System.ArgumentException">Invalid Profile name supplied - options.</exception>
         internal static IAmazonSecretsManager CreateSecretsManagerClient(AwsConfigurationSourceOptions options)
+        {
+            return CreateAwsClient<IAmazonSecretsManager, AmazonSecretsManagerConfig>(options, CreateSecretsManagerClient);
+        }
+
+        private static TClient CreateAwsClient<TClient, TConfig>(AwsConfigurationSourceOptions options, Func<AWSCredentials, TConfig, TClient> clientFactory)
+            where TConfig : ClientConfig, new()
         {
             if (options == null)
             {
@@ -32,10 +64,27 @@ namespace Inixe.Extensions.AwsConfigSource
 
             if (!string.IsNullOrEmpty(options.ProfileName))
             {
-                return CreateClientWithProfileCredentials(options);
+                return CreateClientFromProfile<TClient, TConfig>(options, clientFactory);
             }
 
-            var clientOptions = new AmazonSecretsManagerConfig();
+            var clientOptions = ConfigureOptions<TConfig>(options);
+            return clientFactory(null, clientOptions);
+        }
+
+        private static IAmazonSimpleSystemsManagement CreateSystemsManagementClient(AWSCredentials credentials, AmazonSimpleSystemsManagementConfig config)
+        {
+            return credentials == null ? new AmazonSimpleSystemsManagementClient(config) : new AmazonSimpleSystemsManagementClient(credentials, config);
+        }
+
+        private static IAmazonSecretsManager CreateSecretsManagerClient(AWSCredentials credentials, AmazonSecretsManagerConfig config)
+        {
+            return credentials == null ? new AmazonSecretsManagerClient(config) : new AmazonSecretsManagerClient(credentials, config);
+        }
+
+        private static T ConfigureOptions<T>(AwsConfigurationSourceOptions options)
+            where T : ClientConfig, new()
+        {
+            var clientOptions = new T();
             if (!string.IsNullOrWhiteSpace(options.AwsRegionName))
             {
                 clientOptions.RegionEndpoint = FindRegionEndpoint(options.AwsRegionName);
@@ -46,7 +95,7 @@ namespace Inixe.Extensions.AwsConfigSource
                 clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
             }
 
-            return new AmazonSecretsManagerClient(clientOptions);
+            return clientOptions;
         }
 
         private static RegionEndpoint FindRegionEndpoint(string awsRegionName)
@@ -57,9 +106,10 @@ namespace Inixe.Extensions.AwsConfigSource
             return Amazon.RegionEndpoint.EnumerableAllRegions.SingleOrDefault(predicate);
         }
 
-        private static IAmazonSecretsManager CreateClientWithProfileCredentials(AwsConfigurationSourceOptions options)
+        private static TClient CreateClientFromProfile<TClient, TConfig>(AwsConfigurationSourceOptions options, Func<AWSCredentials, TConfig, TClient> clientFactory)
+            where TConfig : ClientConfig, new()
         {
-            var clientOptions = new AmazonSecretsManagerConfig();
+            var clientOptions = new TConfig();
             var credentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile(options.AwsCredentialsProfilePath);
             if (credentialsFile.TryGetProfile(options.ProfileName, out var credentialProfile))
             {
@@ -72,7 +122,7 @@ namespace Inixe.Extensions.AwsConfigSource
                     clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
                 }
 
-                return new AmazonSecretsManagerClient(credentials, clientOptions);
+                return clientFactory(credentials, clientOptions);
             }
             else
             {
