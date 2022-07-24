@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="SecretsManagerConfigurationProvider.cs" company="Inixe S.A.">
+// <copyright file="SecretsManagerConfigurationProviderStrategy.cs" company="Inixe S.A.">
 // Copyright All Rights reserved. Inixe S.A. 2021
 // </copyright>
 // -----------------------------------------------------------------------
@@ -11,13 +11,12 @@ namespace Inixe.Extensions.AwsConfigSource
     using System.Threading.Tasks;
     using Amazon.SecretsManager;
     using Amazon.SecretsManager.Model;
-    using Microsoft.Extensions.Configuration;
 
     /// <summary>
-    /// Configuration Provider for Secrets Manager.
+    /// Configuration Provider strategy for Secrets Manager.
     /// </summary>
     /// <seealso cref="Microsoft.Extensions.Configuration.ConfigurationProvider" />
-    internal class SecretsManagerConfigurationProvider : ConfigurationProvider
+    internal class SecretsManagerConfigurationProviderStrategy : IConfigurationProviderStrategy
     {
         private readonly Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> secretsManagerFactory;
         private readonly AwsConfigurationSourceOptions options;
@@ -25,16 +24,16 @@ namespace Inixe.Extensions.AwsConfigSource
         private IAmazonSecretsManager secretsManagerClient;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecretsManagerConfigurationProvider"/> class.
+        /// Initializes a new instance of the <see cref="SecretsManagerConfigurationProviderStrategy"/> class.
         /// </summary>
         /// <param name="options">The options.</param>
-        public SecretsManagerConfigurationProvider(AwsConfigurationSourceOptions options)
+        public SecretsManagerConfigurationProviderStrategy(AwsConfigurationSourceOptions options)
             : this(AwsClientHelpers.CreateSecretsManagerClient, options, new JsonValuePairStrategy())
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecretsManagerConfigurationProvider"/> class.
+        /// Initializes a new instance of the <see cref="SecretsManagerConfigurationProviderStrategy"/> class.
         /// </summary>
         /// <param name="secretsManagerFactory">The secrets manager factory.</param>
         /// <param name="options">The options.</param>
@@ -46,11 +45,25 @@ namespace Inixe.Extensions.AwsConfigSource
         /// or
         /// valuePairStrategy is null.
         /// </exception>
-        internal SecretsManagerConfigurationProvider(Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> secretsManagerFactory, AwsConfigurationSourceOptions options, IValuePairStrategy valuePairStrategy)
+        internal SecretsManagerConfigurationProviderStrategy(Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> secretsManagerFactory, AwsConfigurationSourceOptions options, IValuePairStrategy valuePairStrategy)
         {
             this.options = options ?? throw new ArgumentNullException(nameof(options));
             this.secretsManagerFactory = secretsManagerFactory ?? throw new ArgumentNullException(nameof(secretsManagerFactory));
             this.valuePairStrategy = valuePairStrategy ?? throw new ArgumentNullException(nameof(valuePairStrategy));
+        }
+
+        /// <summary>
+        /// Gets the implementation name.
+        /// </summary>
+        /// <value>
+        /// The implementation name.
+        /// </value>
+        public string Name
+        {
+            get
+            {
+                return nameof(SecretsManagerConfigurationProviderStrategy);
+            }
         }
 
         /// <summary>
@@ -59,7 +72,7 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <value>
         /// The options instance.
         /// </value>
-        internal AwsConfigurationSourceOptions Options
+        public AwsConfigurationSourceOptions Options
         {
             get
             {
@@ -83,11 +96,14 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <summary>
         /// Loads (or reloads) the data for this provider.
         /// </summary>
-        public override void Load()
+        /// <returns>A dictionary with all the values provided by the strategy.</returns>
+        public IDictionary<string, string> LoadValues()
         {
-            this.Data = Task.Run(async () => await this.LoadSecretsAsync())
+            var data = Task.Run(async () => await this.LoadSecretsAsync())
                 .GetAwaiter()
                 .GetResult();
+
+            return data;
         }
 
         private async Task<IDictionary<string, string>> LoadSecretsAsync()

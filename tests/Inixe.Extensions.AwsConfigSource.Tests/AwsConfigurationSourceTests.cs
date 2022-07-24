@@ -72,7 +72,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var res = sut.Build(builder);
 
             // Assert
-            Assert.IsType<SecretsManagerConfigurationProvider>(res);
+            Assert.IsType<AwsConfigurationProvider>(res);
         }
 
         [Fact]
@@ -85,10 +85,10 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstanceFromSection();
 
             // Act
-            var res = (SecretsManagerConfigurationProvider)sut.Build(builder);
+            var res = (AwsConfigurationProvider)sut.Build(builder);
 
             // Assert
-            Assert.Equal(Amazon.RegionEndpoint.SAEast1.SystemName, res.Options.AwsRegionName);
+            Assert.Equal(Amazon.RegionEndpoint.SAEast1.SystemName, res.Strategies[0].Options.AwsRegionName);
         }
 
         private static Mock<IConfigurationBuilder> SetupConfigurationBuilder(string regionName)

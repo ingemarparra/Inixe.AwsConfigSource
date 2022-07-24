@@ -1,4 +1,10 @@
-﻿namespace Inixe.Extensions.AwsConfigSource.Tests
+﻿// -----------------------------------------------------------------------
+// <copyright file="ConfigurationBuilderExtensionsTests.cs" company="Inixe S.A.">
+// Copyright All Rights reserved. Inixe S.A. 2021
+// </copyright>
+// -----------------------------------------------------------------------
+
+namespace Inixe.Extensions.AwsConfigSource.Tests
 {
     using System;
     using System.Collections.Generic;

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------
-// <copyright file="SecretsManagerConfigurationProviderTests.cs" company="Inixe S.A.">
+// <copyright file="SecretsManagerConfigurationProviderStrategyTests.cs" company="Inixe S.A.">
 // Copyright All Rights reserved. Inixe S.A. 2021
 // </copyright>
 // -----------------------------------------------------------------------
@@ -17,7 +17,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
     using Moq;
     using Xunit;
 
-    public class SecretsManagerConfigurationProviderTests
+    public class SecretsManagerConfigurationProviderStrategyTests
     {
         private const string SecretName = "top-secret";
         private const string SecretValue = "don't tell";
@@ -25,7 +25,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
         private Mock<IAmazonSecretsManager> secretsManagerMock;
         private Mock<IValuePairStrategy> valuePairStrategyMock;
 
-        public SecretsManagerConfigurationProviderTests()
+        public SecretsManagerConfigurationProviderStrategyTests()
         {
             this.valuePairStrategyMock = new Mock<IValuePairStrategy>(MockBehavior.Strict);
             this.valuePairStrategyMock.Setup(x => x.GetConfigurationPairs(It.IsAny<string>(), It.IsAny<string>()))
@@ -51,7 +51,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             AwsConfigurationSourceOptions options = null;
 
             // Assert
-            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProvider(options));
+            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProviderStrategy(options));
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             IValuePairStrategy valuePairStrategy = null;
 
             // Assert
-            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy));
+            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProviderStrategy(factory, options, valuePairStrategy));
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             IValuePairStrategy valuePairStrategy = null;
 
             // Assert
-            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy));
+            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProviderStrategy(factory, options, valuePairStrategy));
         }
 
         [Fact]
@@ -87,7 +87,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             IValuePairStrategy valuePairStrategy = null;
 
             // Assert
-            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy));
+            Assert.Throws<ArgumentNullException>(() => new SecretsManagerConfigurationProviderStrategy(factory, options, valuePairStrategy));
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             IValuePairStrategy valuePairStrategy = this.valuePairStrategyMock.Object;
 
             // Act
-            var sut = new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy);
+            var sut = new SecretsManagerConfigurationProviderStrategy(factory, options, valuePairStrategy);
 
             // Assert
             Assert.NotNull(sut);
@@ -113,7 +113,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             this.secretsManagerMock.Verify(x => x.ListSecretsAsync(It.IsAny<ListSecretsRequest>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -135,14 +135,14 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             Assert.True(wasCalled);
         }
 
         [Fact]
-        public void Should_PassSecrestsFilter_When_LoadingSettingsAndSecretNameAsPathIsTrue()
+        public void Should_PassSecretsFilter_When_LoadingSettingsAndSecretNameAsPathIsTrue()
         {
             // Arrange
             const string BasePath = "/inixe/packages";
@@ -160,7 +160,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             Assert.True(isUsingFilters);
@@ -183,14 +183,14 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             Assert.True(wasCalled);
         }
 
         [Fact]
-        public void Should_GetListedSecrests_When_LoadingSettingsAndSecretNameAsPathIsTrue()
+        public void Should_GetListedSecrets_When_LoadingSettingsAndSecretNameAsPathIsTrue()
         {
             // Arrange
             this.SetupSecretsManagerSecret(SecretName, SecretValue);
@@ -200,14 +200,14 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             this.secretsManagerMock.Verify(x => x.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public void Should_GetListedSecrestsByArn_When_LoadingSettingsAndSecretNameAsPathIsTrue()
+        public void Should_GetListedSecretsByArn_When_LoadingSettingsAndSecretNameAsPathIsTrue()
         {
             // Arrange
             var hasArn = false;
@@ -234,7 +234,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            sut.LoadValues();
 
             // Assert
             Assert.True(hasArn);
@@ -258,10 +258,10 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var sut = this.CreateInstance(options);
 
             // Act
-            sut.Load();
+            var values = sut.LoadValues();
 
             // Assert
-            Assert.True(sut.TryGet(expectedName, out _));
+            Assert.True(values.ContainsKey(expectedName));
         }
 
         private void SetupSecretsManagerSecret(string secretName, string secretValue)
@@ -281,12 +281,12 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
                 .Returns(Task.FromResult(new GetSecretValueResponse { Name = secretName, SecretString = secretValue }));
         }
 
-        private SecretsManagerConfigurationProvider CreateInstance(AwsConfigurationSourceOptions options)
+        private SecretsManagerConfigurationProviderStrategy CreateInstance(AwsConfigurationSourceOptions options)
         {
             Func<AwsConfigurationSourceOptions, IAmazonSecretsManager> factory = options => this.secretsManagerMock.Object;
             IValuePairStrategy valuePairStrategy = this.valuePairStrategyMock.Object;
 
-            return new SecretsManagerConfigurationProvider(factory, options, valuePairStrategy);
+            return new SecretsManagerConfigurationProviderStrategy(factory, options, valuePairStrategy);
         }
     }
 }

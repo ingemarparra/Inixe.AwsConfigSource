@@ -72,7 +72,11 @@ namespace Inixe.Extensions.AwsConfigSource
                 this.LoadOptionsFromConfiguration(builder);
             }
 
-            var provider = new SecretsManagerConfigurationProvider(this.options);
+            var strategies = new List<IConfigurationProviderStrategy>();
+            strategies.Add(new SecretsManagerConfigurationProviderStrategy(this.options));
+            strategies.Add(new SystemsManagerConfigurationProviderStrategy(this.options));
+
+            var provider = new AwsConfigurationProvider(strategies);
             return provider;
         }
 
