@@ -13,10 +13,11 @@
     <summary>Extends Microsoft.Extensions.Configuration by adding AWS Secrets Manager.</summary>
     <projectUrl>https://github.com/ingemarparra/Inixe.AwsConfigSource</projectUrl>
     <repository type="git" url="https://github.com/ingemarparra/Inixe.AwsConfigSource"/>
-    <tags>aws-secrets-manager configuration</tags>
+    <tags>aws-secrets-manager paramete-store configuration secretsmanager</tags>
 
     <dependencies>
       <dependency id="AWSSDK.SecretsManager" version="3.7.2.50" />
+      <dependency id="AWSSDK.SimpleSystemsManagement" version="3.7.17.20" />
       <dependency id="Microsoft.Extensions.Configuration" version="6.0.1" />
     </dependencies>
   </metadata>
