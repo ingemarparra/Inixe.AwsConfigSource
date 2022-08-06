@@ -26,36 +26,77 @@ $PackageVersion="1.0.0"
 dotnet build Inixe.Extensions.AwsConfigSource.sln -c Release -p:Version=$PackageVersion
 ```
 
+# Features
+
+* Integrates Systems Manager Parameter store as a configuration source
+* Integrates Secrets Manager as a configuration source
+
 # How to use
 
 Using the package is as simple as adding a new configuration source.
 
 ```csharp
-public IConfigurationBuilder SetupConfiguration()
+using Inixe.Extensions.AwsConfigSource;
+using System;
+using Microsoft.Extensions.Configuration;
+
+namespace Inixe.Extensions.AwsConfigSource
 {
-    var builder = new ConfigurationBuilder();
-    builder.AddAwsConfiguration();
-    
-    return builder;
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var configuration = SetupConfiguration()
+                .Build();
+
+            // Your code your secrets and parameters here...
+        }
+
+        private IConfigurationBuilder SetupConfiguration()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddAwsConfiguration();
+
+            return builder;
+        }
+    }
 }
 ```
 
 The configuration source is optional by default, so it's recommended to add it last to the build chain.
 
 ```csharp
-public IConfigurationBuilder SetupConfiguration()
+using Inixe.Extensions.AwsConfigSource;
+using System;
+using Microsoft.Extensions.Configuration;
+
+namespace Inixe.Extensions.AwsConfigSource
 {
-    var builder = new ConfigurationBuilder();
-    builder.AddJsonFile("appsettings.json")
-        .AddEnvironmentVariables()
-        .AddInMemoryCollection()
-        .AddAwsConfiguration();
-    
-    return builder;
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var configuration = SetupConfiguration()
+                .Build();
+
+            // Your code your secrets and parameters here...
+        }
+
+        private IConfigurationBuilder SetupConfiguration()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .AddInMemoryCollection()
+                .AddAwsConfiguration();
+
+            return builder;
+        }
+    }
 }
 ```
 
-Check the samples folder for more details.
+Check the samples folder for more details and/or the [configuration options](doc/configuration.md) for further information.
 
 # License
 
