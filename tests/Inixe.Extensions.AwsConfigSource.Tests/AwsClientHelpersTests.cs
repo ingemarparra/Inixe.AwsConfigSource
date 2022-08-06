@@ -162,7 +162,7 @@ namespace Inixe.Extensions.AwsConfigSource.Tests
             var options = new AwsConfigurationSourceOptions();
             options.ProfileName = ProfileName;
             options.AwsCredentialsProfilePath = credentialsFilePath;
-            options.SecretsManagerServiceUrl = EndpointUrl;
+            options.SystemsManagementServiceUrl = EndpointUrl;
 
             // Act
             var client = AwsClientHelpers.CreateSystemsManagementClient(options);

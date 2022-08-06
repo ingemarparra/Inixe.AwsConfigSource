@@ -39,7 +39,7 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <exception cref="System.ArgumentException">Invalid Profile name supplied - options.</exception>
         internal static IAmazonSimpleSystemsManagement CreateSystemsManagementClient(AwsConfigurationSourceOptions options)
         {
-            return CreateAwsClient<IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementConfig>(options, CreateSystemsManagementClient);
+            return CreateAwsClient<IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementConfig>(options, options?.SystemsManagementServiceUrl, CreateSystemsManagementClient);
         }
 
         /// <summary>
@@ -51,10 +51,10 @@ namespace Inixe.Extensions.AwsConfigSource
         /// <exception cref="System.ArgumentException">Invalid Profile name supplied - options.</exception>
         internal static IAmazonSecretsManager CreateSecretsManagerClient(AwsConfigurationSourceOptions options)
         {
-            return CreateAwsClient<IAmazonSecretsManager, AmazonSecretsManagerConfig>(options, CreateSecretsManagerClient);
+            return CreateAwsClient<IAmazonSecretsManager, AmazonSecretsManagerConfig>(options, options?.SecretsManagerServiceUrl, CreateSecretsManagerClient);
         }
 
-        private static TClient CreateAwsClient<TClient, TConfig>(AwsConfigurationSourceOptions options, Func<AWSCredentials, TConfig, TClient> clientFactory)
+        private static TClient CreateAwsClient<TClient, TConfig>(AwsConfigurationSourceOptions options, string serviceUrlOverride, Func<AWSCredentials, TConfig, TClient> clientFactory)
             where TConfig : ClientConfig, new()
         {
             if (options == null)
@@ -64,10 +64,10 @@ namespace Inixe.Extensions.AwsConfigSource
 
             if (!string.IsNullOrEmpty(options.ProfileName))
             {
-                return CreateClientFromProfile<TClient, TConfig>(options, clientFactory);
+                return CreateClientFromProfile<TClient, TConfig>(options, serviceUrlOverride, clientFactory);
             }
 
-            var clientOptions = ConfigureOptions<TConfig>(options);
+            var clientOptions = ConfigureOptions<TConfig>(options, serviceUrlOverride);
             return clientFactory(null, clientOptions);
         }
 
@@ -81,7 +81,7 @@ namespace Inixe.Extensions.AwsConfigSource
             return credentials == null ? new AmazonSecretsManagerClient(config) : new AmazonSecretsManagerClient(credentials, config);
         }
 
-        private static T ConfigureOptions<T>(AwsConfigurationSourceOptions options)
+        private static T ConfigureOptions<T>(AwsConfigurationSourceOptions options, string serviceUrlOverride)
             where T : ClientConfig, new()
         {
             var clientOptions = new T();
@@ -90,9 +90,9 @@ namespace Inixe.Extensions.AwsConfigSource
                 clientOptions.RegionEndpoint = FindRegionEndpoint(options.AwsRegionName);
             }
 
-            if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
+            if (!string.IsNullOrEmpty(serviceUrlOverride))
             {
-                clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
+                clientOptions.ServiceURL = serviceUrlOverride;
             }
 
             return clientOptions;
@@ -106,7 +106,7 @@ namespace Inixe.Extensions.AwsConfigSource
             return Amazon.RegionEndpoint.EnumerableAllRegions.SingleOrDefault(predicate);
         }
 
-        private static TClient CreateClientFromProfile<TClient, TConfig>(AwsConfigurationSourceOptions options, Func<AWSCredentials, TConfig, TClient> clientFactory)
+        private static TClient CreateClientFromProfile<TClient, TConfig>(AwsConfigurationSourceOptions options, string serviceUrlOverride, Func<AWSCredentials, TConfig, TClient> clientFactory)
             where TConfig : ClientConfig, new()
         {
             var clientOptions = new TConfig();
@@ -117,9 +117,9 @@ namespace Inixe.Extensions.AwsConfigSource
                 clientOptions.RegionEndpoint = credentialProfile.Region;
 
                 // Setting the Region endpoint will reset the Service URL to null.
-                if (!string.IsNullOrEmpty(options.SecretsManagerServiceUrl))
+                if (!string.IsNullOrEmpty(serviceUrlOverride))
                 {
-                    clientOptions.ServiceURL = options.SecretsManagerServiceUrl;
+                    clientOptions.ServiceURL = serviceUrlOverride;
                 }
 
                 return clientFactory(credentials, clientOptions);

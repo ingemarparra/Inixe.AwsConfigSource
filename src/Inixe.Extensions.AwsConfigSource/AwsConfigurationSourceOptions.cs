@@ -60,9 +60,17 @@ namespace Inixe.Extensions.AwsConfigSource
         /// Gets or sets the secrets manager service URL. If you are using a VPC endpoint or a compatible API, this can override the SDK selected endpoint.
         /// </summary>
         /// <value>
-        /// The service URL.
+        /// The Secrets Manager service URL.
         /// </value>
         public string SecretsManagerServiceUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the systems manager parameter store service URL. If you are using a VPC endpoint or a compatible API, this can override the SDK selected endpoint.
+        /// </summary>
+        /// <value>
+        /// The Systems Manager Parameter Store service URL.
+        /// </value>
+        public string SystemsManagementServiceUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the profile. This is useful for on-premises deployments where a credential file or a AWS CLI profile is available.
